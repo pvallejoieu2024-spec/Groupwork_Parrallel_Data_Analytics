@@ -5,12 +5,16 @@ __pycache__/
 
 # macOS temporary files
 .DS_Store
+__MACOSX/
 
-# Ignore raw flight datasets and compressed datasets
+# Ignore downloaded datasets
 data/raw/
+data/OSPC_Flight_Data/
+
+# Ignore compressed datasets
 data/*.zip
 
-# Keep data folder structure and download script
+# Keep data download script
 !data/.gitkeep
 
 # Ignore generated results
