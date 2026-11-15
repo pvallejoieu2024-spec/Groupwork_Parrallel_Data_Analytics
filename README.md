@@ -31,16 +31,20 @@ https://drive.google.com/file/d/1K1v81ux-0DS98DrO88TFirlUXH6KiPdS/view?usp=shari
 
 The structure should look like:
 
+```text
 Groupwork_Parrallel_Data_Analytics/
+│
 ├── data/
 │   ├── download_flights.py
 │   └── raw/
 │       ├── 2023/
 │       ├── 2024/
 │       └── 2025/
+│
 ├── jobs/
 ├── tests/
 └── README.md
+```
 
 ### Option 2: Download the data automatically
 
