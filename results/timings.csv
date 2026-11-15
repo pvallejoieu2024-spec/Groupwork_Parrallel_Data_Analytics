@@ -1,2 +1,0 @@
-version,workers,months,repetition,elapsed_s,node,job_id,date
-baseline,1,36,1,14.174,julia,30244,2026-11-15T18:06:04
