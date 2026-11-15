@@ -14,4 +14,4 @@ data/raw/
 
 # Ignore generated results
 results/*
-!results/.gitkeep
+!results/.gitkeep!results/*.csv
