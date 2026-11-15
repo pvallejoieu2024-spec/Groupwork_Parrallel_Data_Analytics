@@ -1,7 +1,17 @@
+# Python temporary files
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
-data/*
+
+# macOS temporary files
+.DS_Store
+
+# Ignore raw flight datasets
+data/raw/
+
+# Keep data folder structure and download script
 !data/.gitkeep
+
+# Ignore generated results
 results/*
 !results/.gitkeep
