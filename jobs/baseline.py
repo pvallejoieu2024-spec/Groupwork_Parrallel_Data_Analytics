@@ -4,12 +4,19 @@ Sequential baseline: share of departures delayed >15 min, by airport and hour.
 Usage (from the repo root):
     python jobs/baseline.py                                  # default folder, 36 months
     python jobs/baseline.py --months 3                       # quick test
-    python jobs/baseline.py --data-dir /path/to/raw --months 12
+    python jobs/baseline.py --data-dir /path/to/raw --months 12 --repetition 2
+
+Saves:
+    results/timings.csv                    one row per run (appended)
+    results/baseline_<months>m.csv         the result table
 """
 import argparse
 import calendar
+import csv
+import datetime
 import glob
 import os
+import socket
 import time
 
 import pandas as pd
@@ -46,12 +53,26 @@ def process_month(path):
     )
 
 
+def save_timing(path, row):
+    """Append one row to the timings CSV (write the header if the file is new)."""
+    new_file = not os.path.exists(path)
+    with open(path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(row))
+        if new_file:
+            writer.writeheader()
+        writer.writerow(row)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sequential baseline")
     parser.add_argument("--data-dir", default=DEFAULT_DATA_DIR,
                         help="folder containing the monthly BTS CSV files")
     parser.add_argument("--months", type=int, default=36,
                         help="number of months to process (size parameter)")
+    parser.add_argument("--repetition", type=int, default=1,
+                        help="repetition number (the brief asks for at least 5)")
+    parser.add_argument("--results-dir", default="results",
+                        help="where to save the timings and the result table")
     args = parser.parse_args()
 
     data_dir = os.path.expanduser(args.data_dir)
@@ -66,6 +87,19 @@ def main():
     busy = result[result["n_flights"] >= 100]
     print(busy.sort_values("delay_share", ascending=False).head(10))
     print(f"{args.months} months processed in {elapsed:.2f} seconds")
+
+    os.makedirs(args.results_dir, exist_ok=True)
+    result.to_csv(os.path.join(args.results_dir, f"baseline_{args.months}m.csv")) #to save the results in the results folder
+    save_timing(os.path.join(args.results_dir, "timings.csv"), {
+        "version": "baseline",
+        "workers": 1,
+        "months": args.months,
+        "repetition": args.repetition,
+        "elapsed_s": round(elapsed, 3),
+        "node": socket.gethostname(),
+        "job_id": os.environ.get("SLURM_JOB_ID", "local"),
+        "date": datetime.datetime.now().isoformat(timespec="seconds"),
+    })
 
 
 if __name__ == "__main__":
