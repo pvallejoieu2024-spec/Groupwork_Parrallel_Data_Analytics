@@ -21,3 +21,7 @@ data/*.zip
 results/*
 !results/.gitkeep
 !results/*.csv
+
+!results/*/
+results/*/*
+!results/*/*.csv
