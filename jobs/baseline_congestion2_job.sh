@@ -27,6 +27,6 @@ cd "$HOME/Groupwork_Parrallel_Data_Analytics"
 for rep in 1 2 3 4 5; do
     python jobs/baseline_congestion2.py \
         --data-dir data/OSPC_Flight_Data/raw \
-        --months 36 --results-dir results/v2 \
+        --months 132 --results-dir results/v2 \
         --repetition "$rep"
 done

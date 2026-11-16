@@ -52,7 +52,7 @@ DEFAULT_DATA_DIR = Path(
     )
 ).expanduser()
 
-FIRST_YEAR = 2023
+FIRST_YEAR = 2015
 LAST_YEAR = 2025
 
 COLUMNS = [
