@@ -2,7 +2,7 @@
 Strong-scaling plot of the process-pool version.
 
 Reads results/timings_pool.csv (one row per run) and, if present, the
-baseline runs in results/timings.csv. Saves results/strong_scaling_pool.png
+baseline v2 runs in results/v2/timings.csv. Saves results/strong_scaling_pool.png
 and prints the table (median, min, max, speedup, efficiency).
 
 Usage:
@@ -29,7 +29,7 @@ table["speedup"] = reference / table["median"]
 table["efficiency"] = table["speedup"] / table.index
 print(table.round(3))
 
-baseline_file = RESULTS / "timings.csv"
+baseline_file = RESULTS / "v2" / "timings.csv"
 baseline_median = None
 if baseline_file.exists():
     base = pd.read_csv(baseline_file)
