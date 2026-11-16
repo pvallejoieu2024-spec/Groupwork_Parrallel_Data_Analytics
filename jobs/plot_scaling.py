@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-MONTHS = 36
+MONTHS = 132
 
 pool = pd.read_csv(RESULTS / "timings_pool.csv")
 pool = pool[pool["months"] == MONTHS]

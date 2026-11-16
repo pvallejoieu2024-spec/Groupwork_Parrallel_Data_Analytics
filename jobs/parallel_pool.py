@@ -94,7 +94,7 @@ def main():
     parser.add_argument("--data-dir", type=Path, default=base.DEFAULT_DATA_DIR)
     parser.add_argument("--first-year", type=int, default=base.FIRST_YEAR)
     parser.add_argument("--last-year", type=int, default=base.LAST_YEAR)
-    parser.add_argument("--months", type=int, default=36)
+    parser.add_argument("--months", type=int, default=132)
     parser.add_argument("--workers", type=int, required=True)
     parser.add_argument("--repetition", type=int, default=1)
     parser.add_argument("--results-dir", type=Path, default=base.PROJECT_ROOT / "results")

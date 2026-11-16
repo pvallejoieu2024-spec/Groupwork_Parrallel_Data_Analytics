@@ -3,10 +3,10 @@
 #SBATCH --partition=cpu
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=24G
-#SBATCH --time=00:45:00
+#SBATCH --time=01:30:00
 #SBATCH --output=results/congestion-pool-%j.out
 
-# Strong scaling of the process-pool version: 36 months, 1-32 workers,
+# Strong scaling of the process-pool version: 132 months, 1-32 workers,
 # 5 repetitions each.
 # --cpus-per-task=64: Slurm counts each hardware thread as a CPU, so 64
 # CPUs = 32 physical cores, enough for 32 workers on separate cores.
@@ -31,7 +31,7 @@ python tests/check_equivalence.py --data-dir "$DATA" --months 3 --workers 3
 # 2. Strong scaling
 for workers in 1 2 4 8 16 32; do
     for rep in 1 2 3 4 5; do
-        python jobs/parallel_pool.py --data-dir "$DATA" --months 36 \
+        python jobs/parallel_pool.py --data-dir "$DATA" --months 132 \
             --workers "$workers" --repetition "$rep"
     done
 done
