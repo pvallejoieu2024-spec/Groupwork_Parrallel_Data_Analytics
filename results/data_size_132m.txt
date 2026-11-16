@@ -1,0 +1,3 @@
+Months: 132   Flights: 70,081,045
+Old version (5 columns):     1004 MiB
+New version (14 columns):    3009 MiB
