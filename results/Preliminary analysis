@@ -1,0 +1,84 @@
+Preliminary analytical findings
+
+
+
+Our analysis has produced some interesting results:
+
+
+
+Airport congestion and departure delays
+
+
+
+We found a positive relationship between the number of flights scheduled in an airport-hour and the proportion of delayed departures:
+
+
+
+- Airport-hours with 1–2 flights: approximately 15.9% delayed.
+
+- Airport-hours with 41 or more flights: approximately 19.8% delayed.
+
+
+
+Average taxi-out time also increases from approximately 14.7 minutes to 19.3 minutes as airport activity increases.
+
+
+
+However, the correlation between congestion and departure delay share is only approximately 0.04.
+
+
+
+This suggests that congestion is associated with delays, but the relationship is weak and congestion alone explains very little of their variation.
+
+
+
+Time-of-day patterns
+
+
+
+The time of day appears to have a much stronger relationship with delays:
+
+
+
+- 5–6 a.m.: approximately 7% delayed.
+
+- 7–9 p.m.: approximately 28% delayed.
+
+
+
+This suggests that delays accumulate throughout the day.
+
+
+
+Some of the airport-hours with the highest delay shares include:
+
+
+
+- BWI at 9 p.m.: approximately 46%
+
+- DAL at 9 p.m.
+
+- MCO and MDW at 10 p.m.: approximately 44%
+
+
+
+Day-of-week patterns
+
+
+
+- Fridays and Sundays show the highest delay shares, around 20%.
+
+- Tuesdays and Wednesdays show the lowest, around 17%.
+
+
+
+Reported delay causes
+
+
+
+Among the reported causes, late aircraft delays account for approximately 40%, followed by carrier delays at approximately 34%. Weather represents only around 5%
+
+
+
+We understand that the BTS delay-cause variables refer to arrival delays, so we would like to confirm how best to incorporate this analysis into our departure-congestion study.
+
