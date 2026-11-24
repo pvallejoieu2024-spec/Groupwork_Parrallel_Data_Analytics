@@ -17,8 +17,8 @@ This project uses the **Bureau of Transportation Statistics (BTS)
 Reporting Carrier On-Time Performance dataset**.
 
 - **Source:** [Bureau of Transportation Statistics](https://www.transtats.bts.gov/DL_SelectFields.aspx?gnoyr_VQ=FGJ)
-- **Period:** January 2023 – December 2025
-- **Files:** 36 monthly CSV files
+- **Period:** January 2015 – December 2025
+- **Files:** 132 monthly CSV files
 - **Variables:** 36 selected flight-related variables
 - **Format:** CSV
 
