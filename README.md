@@ -60,6 +60,7 @@ from the official BTS website:
 
 ```bash
 python data/download_flights.py
+```
 
 ## Running the Project
 
