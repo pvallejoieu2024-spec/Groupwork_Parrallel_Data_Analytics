@@ -60,3 +60,46 @@ from the official BTS website:
 
 ```bash
 python data/download_flights.py
+
+### **Running the Project**
+
+All commands must be executed from the root directory of
+the cloned repository.
+
+#### Step 1: Navigate to the project directory
+
+```bash
+cd Groupwork_Parrallel_Data_Analytics
+```
+
+#### Step 2: Validate the dataset
+
+Before running the analysis, verify that all 132 monthly
+CSV files from 2015 to 2025 are present and correctly formatted.
+
+```bash
+python -m pytest tests/test_data.py -v
+```
+
+The expected result is:
+
+```text
+396 passed
+```
+
+#### Step 3: Run the sequential baseline
+
+```bash
+python jobs/baseline_congestion2.py
+```
+
+The scripts automatically locate the dataset in:
+
+```text
+data/OSPC_Flight_Data/raw/
+```
+
+No manual path modifications or environment variable
+configuration are required when the recommended directory
+structure is followed.
+
