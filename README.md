@@ -29,16 +29,27 @@ the complete dataset as a compressed ZIP file.
 
 https://drive.google.com/file/d/17y1GW_BVLtHeb0Dhkov_tGOPv0usQ9xG/view?usp=sharing
 
-The structure should look like:
+#### Step 1: Extract the dataset
+
+Download and extract the ZIP file into the `data/` directory
+of the cloned repository.
+
+The resulting directory structure should look like:
 
 ```text
 Groupwork_Parrallel_Data_Analytics/
 │
 ├── data/
 │   ├── download_flights.py
-│
+│   └── OSPC_Flight_Data/
+│       └── raw/
+│           ├── 2015/
+│           ├── 2016/
+│           ├── ...
+│           └── 2025/
 ├── jobs/
 ├── tests/
+├── .gitignore
 └── README.md
 ```
 
