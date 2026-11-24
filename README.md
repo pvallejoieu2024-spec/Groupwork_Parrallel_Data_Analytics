@@ -61,7 +61,7 @@ from the official BTS website:
 ```bash
 python data/download_flights.py
 
-### **Running the Project**
+## Running the Project
 
 All commands must be executed from the root directory of
 the cloned repository.
