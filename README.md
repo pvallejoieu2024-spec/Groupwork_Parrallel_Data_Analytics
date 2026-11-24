@@ -36,10 +36,6 @@ Groupwork_Parrallel_Data_Analytics/
 │
 ├── data/
 │   ├── download_flights.py
-│   └── raw/
-│       ├── 2023/
-│       ├── 2024/
-│       └── 2025/
 │
 ├── jobs/
 ├── tests/
