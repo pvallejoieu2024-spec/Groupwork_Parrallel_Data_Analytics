@@ -1,43 +1,30 @@
 from pathlib import Path
 import calendar
+import csv
+import os
 import pytest
 
 
-# Location of the datasets on Patricia's Mac
-DATA_DIR = (
-    Path.home()
-    / "Desktop"
-    / "OSPC_Flight_Data"
-    / "raw"
-)
+# 1. CONFIGURATION - so the code can be reproducible
 
-YEARS = [2023, 2024, 2025]
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+DATA_DIR = Path(
+    os.environ.get(
+        "FLIGHT_DATA_DIR",
+        PROJECT_ROOT / "data" / "OSPC_Flight_Data" / "raw"
+    )
+).expanduser()
+
+# Data we are using 
+YEARS = range(2015, 2026)
 MONTHS = range(1, 13)
 
-
-@pytest.mark.parametrize(
-    "year,month",
-    [
-        (year, month)
-        for year in YEARS
-        for month in MONTHS
-    ]
-)
-def test_files_exist(year, month):
-
-    month_name = calendar.month_name[month]
-
-    filename = f"BTS_Flights_{month_name}_{year}.csv"
-
-    filepath = DATA_DIR / str(year) / filename
-
-    assert filepath.exists(), f"Missing file: {filepath}"
-
-    assert filepath.stat().st_size > 0, (
-        f"Empty file: {filepath}"
-    )
-
-import csv
+MONTHLY_PERIODS = [
+    (year, month)
+    for year in YEARS
+    for month in MONTHS
+]
 
 REQUIRED_COLUMNS = {
     "YEAR",
@@ -78,46 +65,62 @@ REQUIRED_COLUMNS = {
     "LATE_AIRCRAFT_DELAY",
 }
 
-@pytest.mark.parametrize(
-    "year,month",
-    [
-        (year, month)
-        for year in YEARS
-        for month in MONTHS
-    ]
-)
-def test_required_columns(year, month):
+
+# 2. HELPER FUNCTION 
+
+def get_filepath(year, month):
 
     month_name = calendar.month_name[month]
-
     filename = f"BTS_Flights_{month_name}_{year}.csv"
 
-    filepath = DATA_DIR / str(year) / filename
+    return DATA_DIR / str(year) / filename
+
+
+# 3. TEST FILE EXISTENCE
+
+@pytest.mark.parametrize("year,month", MONTHLY_PERIODS)
+def test_files_exist(year, month):
+
+    filepath = get_filepath(year, month)
+
+    assert filepath.is_file(), (
+        f"Missing file: {filepath}"
+    )
+
+    assert filepath.stat().st_size > 0, (
+        f"Empty file: {filepath}"
+    )
+
+
+# 4. TEST REQUIRED COLUMNS
+
+@pytest.mark.parametrize("year,month", MONTHLY_PERIODS)
+def test_required_columns(year, month):
+
+    filepath = get_filepath(year, month)
 
     with open(filepath, newline="", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         columns = next(reader)
 
-    assert len(columns) == 36, (
-        f"{filename}: Expected 36 columns, found {len(columns)}"
+    assert len(columns) == len(REQUIRED_COLUMNS), (
+        f"{filepath.name}: Expected {len(REQUIRED_COLUMNS)} "
+        f"columns, found {len(columns)}"
+    )
+
+    missing_columns = REQUIRED_COLUMNS - set(columns)
+
+    assert not missing_columns, (
+        f"{filepath.name}: Missing columns: {missing_columns}"
     )
 
 
-@pytest.mark.parametrize(
-    "year,month",
-    [
-        (year, month)
-        for year in YEARS
-        for month in MONTHS
-    ]
-)
+# 5. TEST CORRECT PERIOD
+
+@pytest.mark.parametrize("year,month", MONTHLY_PERIODS)
 def test_correct_period(year, month):
 
-    month_name = calendar.month_name[month]
-
-    filename = f"BTS_Flights_{month_name}_{year}.csv"
-
-    filepath = DATA_DIR / str(year) / filename
+    filepath = get_filepath(year, month)
 
     with open(filepath, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -125,9 +128,9 @@ def test_correct_period(year, month):
         for row_number, row in enumerate(reader, start=2):
 
             assert int(row["YEAR"]) == year, (
-                f"{filename}, row {row_number}: Wrong year"
+                f"{filepath.name}, row {row_number}: Wrong year"
             )
 
             assert int(row["MONTH"]) == month, (
-                f"{filename}, row {row_number}: Wrong month"
+                f"{filepath.name}, row {row_number}: Wrong month"
             )
