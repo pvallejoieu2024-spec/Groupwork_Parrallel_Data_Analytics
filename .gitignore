@@ -9,7 +9,7 @@ __MACOSX/
 
 # Ignore downloaded datasets
 data/raw/
-data/OSPC_Flight_Data/
+data/OSPC_Flight_Data_complete/
 
 # Ignore compressed datasets
 data/*.zip
