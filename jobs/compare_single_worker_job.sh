@@ -7,7 +7,8 @@
 #SBATCH --output=results/single-worker-%j.out
 
 # Sequential baseline vs process pool with ONE worker, inside the same job,
-# with exactly the same resources (1 CPU, 1 GiB). The difference between
+# with exactly the same resources as one pool worker (by default 1 CPU and
+# 1 GiB; jobs/submit_pool_scaling.sh overrides them for the whole chain). The difference between
 # the two is the overhead of the pool (starting a worker process and
 # sending each month's tables back to the main process).
 #
@@ -45,8 +46,11 @@ if [[ ! -d "$DATA" ]]; then
     echo "Error: dataset directory not found: $DATA"
     exit 1
 fi
-if (( SLURM_CPUS_PER_TASK != 1 )) || (( SLURM_MEM_PER_NODE != 1024 )); then
-    echo "Error: this job must run with 1 CPU and 1 GiB of memory."
+# Same resources as one pool worker (see jobs/submit_pool_scaling.sh)
+CPUS_PER_WORKER="${CPUS_PER_WORKER:-1}"
+MEM_PER_WORKER_MIB="${MEM_PER_WORKER_MIB:-1024}"
+if (( SLURM_CPUS_PER_TASK != CPUS_PER_WORKER )) || (( SLURM_MEM_PER_NODE != MEM_PER_WORKER_MIB )); then
+    echo "Error: this job must run with $CPUS_PER_WORKER CPU(s) and $MEM_PER_WORKER_MIB MiB of memory."
     exit 1
 fi
 

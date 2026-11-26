@@ -212,6 +212,8 @@ cat results/check-node-<JOB_ID>.out
 
 # 2. Pilot: 1 repetition of every configuration
 bash jobs/submit_pool_scaling.sh <NODE> 1
+#    (one full physical core per worker instead of one hardware thread:
+#     CPUS_PER_WORKER=2 bash jobs/submit_pool_scaling.sh <NODE> 1)
 squeue --me                                     # wait until the chain is finished
 python jobs/plot_scaling.py --submission results/submissions/<pilot file>.csv
 
@@ -227,7 +229,7 @@ Results are saved per job, so new runs never mix with old ones:
 
 ```text
 results/
-├── submissions/<date>_<node>_r<reps>.csv     job IDs of each submission
+├── submissions/<date>_<node>_r<reps>_c<cpus per worker>.csv   job IDs of each submission
 ├── single_worker/<JOB_ID>/                    baseline + pool(1) timings and result tables
 ├── pool/<JOB_ID>/                             pool(W) timings and result tables
 ├── scaling/<submission>_summary.csv           strong-scaling table
@@ -235,11 +237,29 @@ results/
 └── *.out                                      Slurm logs with the experimental conditions
 ```
 
+Older files directly in `results/` (`timings.csv`, `timings_pool.csv`,
+`strong_scaling_pool.png`, `congestion_*_36m.csv`) and in `results/v2/`
+come from the **previous methodology** (512 MiB for the baseline and
+24 GiB for the pool whatever the number of workers, speedup against the
+pool with one worker). They are kept for reference only and are not used
+in the revised analysis.
+
 ### Results (revised methodology)
 
 *To be completed after the runs on the cluster.*
 
-- Node and CPU topology: *pending*
+- Node and CPU topology (`jobs/check_node_job.sh`, job 38288, 26 Nov 2026):
+  the experiments run on **julia**, which has 2 × AMD EPYC 9745
+  (2 sockets × 128 cores × 2 hardware threads = 512 Slurm CPUs) and
+  2 NUMA nodes. We chose julia because the JupyterLab sessions run on
+  haskell, and fortran and haskell were reserved for other jobs.
+  **Slurm allocates CPUs as pairs of hardware threads of the same core:**
+  a job that asked for 4 CPUs got CPUs 4, 5, 260 and 261, which are only
+  physical cores 4 and 5. So `--cpus-per-task=W` gives W/2 physical
+  cores, and with one CPU per worker, two workers share each core.
+  `CPUS_PER_WORKER=2` gives every worker its own physical core (32 workers
+  = 64 CPUs, our limit). A 16-CPU GPU job of another user was also running
+  on julia during this check, so every run records the load of the node.
 - Pilot (1 repetition): *pending*. Does 1 GiB per worker suffice? *pending*
 - Equivalence on the full dataset (132 months): *pending*
 - Sequential baseline vs pool with 1 worker (overhead): *pending*

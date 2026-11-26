@@ -46,8 +46,14 @@ if [[ ! -d "$DATA" ]]; then
 fi
 
 # Validate CPU and memory allocation
-if (( SLURM_CPUS_PER_TASK != WORKERS )); then
-    echo "Error: incorrect CPU allocation (expected $WORKERS, got $SLURM_CPUS_PER_TASK)."
+# Slurm counts each hardware thread as a CPU (2 per physical core).
+# CPUS_PER_WORKER=1: one hardware thread per worker (two workers may share a core)
+# CPUS_PER_WORKER=2: one full physical core per worker
+CPUS_PER_WORKER="${CPUS_PER_WORKER:-1}"
+EXPECTED_CPUS=$((WORKERS * CPUS_PER_WORKER))
+
+if (( SLURM_CPUS_PER_TASK != EXPECTED_CPUS )); then
+    echo "Error: incorrect CPU allocation (expected $EXPECTED_CPUS, got $SLURM_CPUS_PER_TASK)."
     exit 1
 fi
 

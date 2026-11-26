@@ -26,6 +26,11 @@
 # Optional settings (environment variables):
 #     WORKERS_LIST="1 2 4 8 16 32"   worker counts to run
 #     MEM_PER_WORKER_GB=1            memory per worker (GiB)
+#     CPUS_PER_WORKER=1              Slurm CPUs per worker. Slurm counts each
+#                                    hardware thread as a CPU (2 per physical
+#                                    core), so 1 = one hardware thread per
+#                                    worker (two workers can share a core) and
+#                                    2 = one full physical core per worker.
 #     INCLUDE_SINGLE=1               0 = skip the single-worker comparison
 
 set -euo pipefail
@@ -34,6 +39,7 @@ NODE="${1:?Usage: bash jobs/submit_pool_scaling.sh <NODE> [REPETITIONS]}"
 REPETITIONS="${2:-5}"
 WORKERS_LIST="${WORKERS_LIST:-1 2 4 8 16 32}"
 MEM_PER_WORKER_GB="${MEM_PER_WORKER_GB:-1}"
+CPUS_PER_WORKER="${CPUS_PER_WORKER:-1}"
 INCLUDE_SINGLE="${INCLUDE_SINGLE:-1}"
 
 # Always work from the repository root
@@ -51,7 +57,7 @@ fi
 
 mkdir -p results/submissions
 STAMP="$(date +%Y%m%d-%H%M%S)"
-LOG="results/submissions/${STAMP}_${NODE}_r${REPETITIONS}.csv"
+LOG="results/submissions/${STAMP}_${NODE}_r${REPETITIONS}_c${CPUS_PER_WORKER}.csv"
 echo "kind,workers,cpus,mem_gb,repetitions,node,job_id,commit,submitted" > "$LOG"
 COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
@@ -71,7 +77,7 @@ submit() {
         --cpus-per-task="$cpus" \
         --mem="${mem}G" \
         "${dependency[@]}" \
-        --export=ALL,MEM_PER_WORKER_MIB=$((MEM_PER_WORKER_GB * 1024)) \
+        --export=ALL,MEM_PER_WORKER_MIB=$((MEM_PER_WORKER_GB * 1024)),CPUS_PER_WORKER=$CPUS_PER_WORKER \
         "$@")
     job_id="${job_id%%;*}"
     echo "$kind,$workers,$cpus,$mem,$REPETITIONS,$NODE,$job_id,$COMMIT,$(date --iso-8601=seconds)" >> "$LOG"
@@ -80,14 +86,16 @@ submit() {
     PREVIOUS="$job_id"
 }
 
-echo "Submitting to node $NODE, $REPETITIONS repetition(s) per configuration:"
+echo "Submitting to node $NODE, $REPETITIONS repetition(s) per configuration,"
+echo "$CPUS_PER_WORKER Slurm CPU(s) and $MEM_PER_WORKER_GB GiB per worker:"
 
 if [[ "$INCLUDE_SINGLE" == "1" ]]; then
-    submit single_worker 1 1 1 jobs/compare_single_worker_job.sh "$REPETITIONS"
+    submit single_worker 1 "$CPUS_PER_WORKER" "$MEM_PER_WORKER_GB" \
+        jobs/compare_single_worker_job.sh "$REPETITIONS"
 fi
 
 for workers in $WORKERS_LIST; do
-    submit pool "$workers" "$workers" $((workers * MEM_PER_WORKER_GB)) \
+    submit pool "$workers" $((workers * CPUS_PER_WORKER)) $((workers * MEM_PER_WORKER_GB)) \
         jobs/parallel_pool_job.sh "$workers" "$REPETITIONS"
 done
 
