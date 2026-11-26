@@ -25,3 +25,15 @@ results/*
 !results/*/
 results/*/*
 !results/*/*.csv
+
+# Per-job result folders (results/pool/<JOB_ID>/, results/single_worker/<JOB_ID>/)
+!results/*/*/
+!results/*/*/*.csv
+
+# Slurm logs (node, CPUs, memory, topology of every run) and plots
+!results/*.out
+!results/*.png
+!results/*/*.png
+
+# Output of the quick test in the README
+results/quick_test/

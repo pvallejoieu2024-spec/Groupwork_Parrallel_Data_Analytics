@@ -47,14 +47,16 @@ fi
 
 # Validate CPU and memory allocation
 if (( SLURM_CPUS_PER_TASK != WORKERS )); then
-    echo "Error: incorrect CPU allocation."
+    echo "Error: incorrect CPU allocation (expected $WORKERS, got $SLURM_CPUS_PER_TASK)."
     exit 1
 fi
 
-EXPECTED_MEMORY=$((WORKERS * 1024))
+# 1 GiB per worker by default; jobs/submit_pool_scaling.sh can change it
+MEM_PER_WORKER_MIB="${MEM_PER_WORKER_MIB:-1024}"
+EXPECTED_MEMORY=$((WORKERS * MEM_PER_WORKER_MIB))
 
 if (( SLURM_MEM_PER_NODE != EXPECTED_MEMORY )); then
-    echo "Error: incorrect memory allocation."
+    echo "Error: incorrect memory allocation (expected $EXPECTED_MEMORY MiB, got $SLURM_MEM_PER_NODE MiB)."
     exit 1
 fi
 
@@ -62,13 +64,8 @@ fi
 RESULTS="results/pool/${SLURM_JOB_ID}"
 mkdir -p "$RESULTS"
 
-# Report experimental conditions
-echo "Node: $(hostname)"
-echo "Job ID: $SLURM_JOB_ID"
-echo "CPUs: $SLURM_CPUS_PER_TASK"
-echo "Memory: $SLURM_MEM_PER_NODE MiB"
-echo "Workers: $WORKERS"
-echo "Repetitions: $REPETITIONS"
+# Report experimental conditions (node, CPUs, memory, topology, load)
+source jobs/log_conditions.sh
 
 # Run the process pool 5 times by default
 for ((rep=1; rep<=REPETITIONS; rep++)); do

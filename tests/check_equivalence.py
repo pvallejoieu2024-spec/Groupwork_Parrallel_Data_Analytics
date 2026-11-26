@@ -48,10 +48,12 @@ def main():
     parser.add_argument("--data-dir", type=Path, default=base.DEFAULT_DATA_DIR)
     parser.add_argument("--months", type=int, default=3)
     parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--first-year", type=int, default=base.FIRST_YEAR)
+    parser.add_argument("--last-year", type=int, default=base.LAST_YEAR)
     args = parser.parse_args()
 
     files = base.list_month_files(
-        args.data_dir.expanduser(), args.months, base.FIRST_YEAR, base.LAST_YEAR
+        args.data_dir.expanduser(), args.months, args.first_year, args.last_year
     )
 
     print(f"Baseline vs pool ({args.workers} workers), {args.months} months:")

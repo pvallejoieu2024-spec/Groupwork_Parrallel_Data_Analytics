@@ -134,3 +134,113 @@ allocated to its Slurm job.
 
 The final memory allocation and measured peak memory
 usage will be documented alongside the benchmark results.
+
+## Quick test (less than 5 minutes)
+
+To check that everything works before using the cluster, run a small
+configuration (2 months) from the repository root. It needs only the
+January and February 2015 files.
+
+```bash
+# Correctness: the process pool must give the same results as the baseline
+python tests/check_equivalence.py --months 2 --workers 2
+
+# Sequential baseline and process pool on 2 months
+python jobs/baseline_congestion2.py --months 2 --results-dir results/quick_test
+python jobs/parallel_pool.py --months 2 --workers 2 --results-dir results/quick_test
+
+# Compare the result tables saved by both versions
+python tests/compare_outputs.py results/quick_test --months 2
+```
+
+The last command must end with
+`PASSED: the pool output matches the baseline output.`
+If your data is not in `data/OSPC_Flight_Data/raw`, add
+`--data-dir <path>` to every command (or set the `FLIGHT_DATA_DIR`
+environment variable).
+
+## Experimental methodology (revised after the instructor's feedback)
+
+### What changed and why
+
+| Feedback | Change |
+|---|---|
+| The baseline had 512 MiB and the pool 24 GiB whatever the number of workers, which could favour the pool through the page cache. | Every configuration gets **1 CPU and 1 GiB of memory per worker**: baseline 1 GiB, pool with W workers W CPUs and W GiB. The job scripts stop with an error if Slurm gives a different allocation. |
+| Compare the baseline and the pool with one worker under the same conditions. | `jobs/compare_single_worker_job.sh` runs both in the **same job** (1 CPU, 1 GiB), alternating which one runs first in each repetition, so neither always benefits from files already cached. |
+| Speedup must use the sequential baseline as the reference. | `jobs/plot_scaling.py` divides the **median time of the sequential baseline** by the median time with W workers. The pool with one worker is reported separately, to measure the overhead of the pool. |
+| Report how much data each run processes. | Every timing row records `csv_gb` (GB of CSV read, 10⁹ bytes) and `throughput_gb_s`. |
+| All runs must be on the same hardware and not overlap. | `jobs/submit_pool_scaling.sh` submits every configuration to **one node** (`--nodelist`) as a **chain**: each job starts only after the previous one has finished. |
+| Check the CPU topology. | Every job prints its conditions (`jobs/log_conditions.sh`): node, allocated CPU IDs, the physical core each CPU belongs to, memory, load, Git commit, Python and pandas versions. `jobs/check_node_job.sh` does the same before the experiments. |
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `jobs/baseline_congestion2.py` | Sequential baseline (132 months, month by month). |
+| `jobs/parallel_pool.py` | Process pool: one month per task; imports the analysis code from the baseline, so both compute the same thing. |
+| `jobs/log_conditions.sh` | Prints the experimental conditions at the start of every job. |
+| `jobs/check_node_job.sh` | Short job to inspect a node's CPU topology and load before the experiments. |
+| `jobs/compare_single_worker_job.sh` | Baseline vs pool with 1 worker in the same job (1 CPU, 1 GiB), then checks that both outputs match on the full dataset. |
+| `jobs/parallel_pool_job.sh` | Pool with W workers (W CPUs, W GiB), 5 repetitions. |
+| `jobs/submit_pool_scaling.sh` | Submits the single-worker comparison and the pool with 1, 2, 4, 8, 16 and 32 workers as a chain on one node, and saves the job IDs in `results/submissions/`. |
+| `jobs/plot_scaling.py` | Reads the jobs of one submission and produces the strong-scaling table and plot. |
+| `tests/check_equivalence.py` | Baseline vs pool on a small input (run before every experiment). |
+| `tests/compare_outputs.py` | Baseline vs pool on the result tables saved by a full run. |
+
+### Equivalence rules
+
+Counts and minute totals are integers and must be **exactly** equal.
+Shares, means and the correlation are floating-point numbers and must be
+equal within a relative tolerance of 10⁻⁹: adding the monthly results in
+a different order can change only the last digits of a floating-point
+sum. The correlation is saved rounded to 6 decimals, so it is compared
+within 10⁻⁶.
+
+### How to run the experiments on the cluster
+
+All commands from the repository root, in the JupyterLab terminal.
+
+```bash
+# 0. Latest code and the full dataset (see "Dataset")
+git pull --ff-only origin main
+python -m pytest tests/test_data.py -q         # 396 passed
+
+# 1. Choose a node and inspect it
+sinfo -N -l                                     # nodes and their state
+sbatch --nodelist=<NODE> jobs/check_node_job.sh
+cat results/check-node-<JOB_ID>.out
+
+# 2. Pilot: 1 repetition of every configuration
+bash jobs/submit_pool_scaling.sh <NODE> 1
+squeue --me                                     # wait until the chain is finished
+python jobs/plot_scaling.py --submission results/submissions/<pilot file>.csv
+
+# 3. Experiment: 5 repetitions of every configuration
+bash jobs/submit_pool_scaling.sh <NODE>
+python jobs/plot_scaling.py                     # uses the latest submission with 5 repetitions
+
+# 4. Peak memory measured by Slurm for every job of the experiment
+sacct -j <JOB_IDS separated by commas> --format=JobID,JobName,AllocCPUS,ReqMem,MaxRSS,Elapsed,State
+```
+
+Results are saved per job, so new runs never mix with old ones:
+
+```text
+results/
+├── submissions/<date>_<node>_r<reps>.csv     job IDs of each submission
+├── single_worker/<JOB_ID>/                    baseline + pool(1) timings and result tables
+├── pool/<JOB_ID>/                             pool(W) timings and result tables
+├── scaling/<submission>_summary.csv           strong-scaling table
+├── scaling/<submission>.png                   strong-scaling plot
+└── *.out                                      Slurm logs with the experimental conditions
+```
+
+### Results (revised methodology)
+
+*To be completed after the runs on the cluster.*
+
+- Node and CPU topology: *pending*
+- Pilot (1 repetition): *pending*. Does 1 GiB per worker suffice? *pending*
+- Equivalence on the full dataset (132 months): *pending*
+- Sequential baseline vs pool with 1 worker (overhead): *pending*
+- Strong scaling, speedup against the sequential baseline: *pending*

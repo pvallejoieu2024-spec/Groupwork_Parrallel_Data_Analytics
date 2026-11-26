@@ -106,16 +106,23 @@ def main():
 
     results, corr, times = run_pool(files, args.workers)
     main_mem, worker_mem = peak_memory_mib()
+    csv_gb = base.csv_size_gb(files)
 
-    args.results_dir.mkdir(parents=True, exist_ok=True)
+    # Result tables (outside the timed part), so that the output of a full
+    # run can be compared with the baseline using tests/compare_outputs.py
+    base.save_tables(args.results_dir, args.months, results, corr, prefix="pool")
+
     base.save_timing(args.results_dir / "timings_pool.csv", {
         "version": "pool",
         "workers": args.workers,
         "months": args.months,
+        "csv_gb": csv_gb,
         "repetition": args.repetition,
         **times,
+        "throughput_gb_s": round(csv_gb / times["total_s"], 3),
         "peak_mem_main_mib": main_mem,
         "peak_mem_worker_mib": worker_mem,
+        "cpus_available": base.cpus_available(),
         "node": socket.gethostname(),
         "job_id": os.environ.get("SLURM_JOB_ID", "local"),
         "load_1min": round(os.getloadavg()[0], 2),
@@ -125,7 +132,7 @@ def main():
     print(f"pool  workers={args.workers:>2}  months={args.months}  "
           f"rep={args.repetition}  total={times['total_s']:.2f}s  "
           f"(start workers {times['pool_start_s']:.2f}s, "
-          f"parallel part {times['work_s']:.2f}s)")
+          f"parallel part {times['work_s']:.2f}s, {csv_gb:.3f} GB of CSV)")
 
 
 if __name__ == "__main__":

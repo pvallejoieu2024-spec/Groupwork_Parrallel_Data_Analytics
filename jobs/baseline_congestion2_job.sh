@@ -30,11 +30,8 @@ cd "$SLURM_SUBMIT_DIR"
 RESULTS="results/baseline/${SLURM_JOB_ID}"
 mkdir -p "$RESULTS"
 
-# Report experimental conditions
-echo "Node: $(hostname)"
-echo "Job ID: $SLURM_JOB_ID"
-echo "CPUs: $SLURM_CPUS_PER_TASK"
-echo "Memory: $SLURM_MEM_PER_NODE MiB"
+# Report experimental conditions (node, CPUs, memory, topology, load)
+source jobs/log_conditions.sh
 
 # Run the sequential baseline 5 times
 for rep in 1 2 3 4 5; do

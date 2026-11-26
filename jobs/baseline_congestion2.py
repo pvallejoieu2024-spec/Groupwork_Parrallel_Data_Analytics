@@ -568,13 +568,32 @@ def save_timing(path, row):
         writer.writerow(row)
 
 
-def save_results(results_dir, n_months, repetition, results, corr, times):
-    """Save the result tables and one timing row for this run."""
+def cpus_available():
+    """Number of CPUs this process may run on (the Slurm allocation)."""
+
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count()  # macOS has no CPU affinity
+
+
+def csv_size_gb(files):
+    """Size on disk of the CSV files processed in a run, in GB (10^9 bytes)."""
+
+    return round(sum(path.stat().st_size for path in files) / 1e9, 3)
+
+
+def save_tables(results_dir, n_months, results, corr, prefix="congestion"):
+    """Save the result tables and the summary of one run.
+
+    The baseline uses the prefix "congestion" and the process pool uses
+    "pool", so both can be saved in the same folder and compared with
+    tests/compare_outputs.py.
+    """
 
     results_dir.mkdir(parents=True, exist_ok=True)
 
     for name, table in results.items():
-        table.to_csv(results_dir / f"congestion_{name}_{n_months}m.csv")
+        table.to_csv(results_dir / f"{prefix}_{name}_{n_months}m.csv")
 
     airport_hour = results["airport_hour"]
 
@@ -585,19 +604,30 @@ def save_results(results_dir, n_months, repetition, results, corr, times):
         "delayed_flights": airport_hour["delayed_flights"].sum(),
         "correlation_flights_vs_delay_share": round(corr, 6),
     }, dtype=object).to_csv(
-        results_dir / f"congestion_summary_{n_months}m.csv",
+        results_dir / f"{prefix}_summary_{n_months}m.csv",
         header=["value"]
     )
+
+
+def save_results(results_dir, n_months, repetition, results, corr, times,
+                 csv_gb):
+    """Save the result tables and one timing row for this run."""
+
+    save_tables(results_dir, n_months, results, corr, prefix="congestion")
 
     save_timing(results_dir / "timings.csv", {
         "version": "baseline",
         "workers": 1,
         "months": n_months,
+        "csv_gb": csv_gb,
         "repetition": repetition,
         **times,
+        "throughput_gb_s": round(csv_gb / times["total_s"], 3),
         "peak_mem_mib": peak_memory_mib(),
+        "cpus_available": cpus_available(),
         "node": socket.gethostname(),
         "job_id": os.environ.get("SLURM_JOB_ID", "local"),
+        "load_1min": round(os.getloadavg()[0], 2),
         "date": datetime.datetime.now().isoformat(timespec="seconds"),
     })
 
@@ -676,13 +706,17 @@ def main():
 
     display(results, corr, args.months, times)
 
+    csv_gb = csv_size_gb(files)
+    print(f"CSV data processed:    {csv_gb:.3f} GB")
+
     save_results(
         args.results_dir,
         args.months,
         args.repetition,
         results,
         corr,
-        times
+        times,
+        csv_gb
     )
 
 
